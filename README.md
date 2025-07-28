@@ -11,7 +11,7 @@
     <div class="card shadow rounded-4 p-4">
       <h2 class="mb-4 text-center">Aplikasi Kas Anggota</h2>
 
-      <!-- Form Simpanan -->
+      <!-- Form Input -->
       <form id="kasForm" class="mb-4">
         <div class="mb-3">
           <label for="nama" class="form-label">Nama Anggota</label>
@@ -21,27 +21,32 @@
           <label for="jumlah" class="form-label">Jumlah Simpanan (Rp)</label>
           <input type="number" class="form-control" id="jumlah" required />
         </div>
+        <div class="mb-3">
+          <label for="bukti" class="form-label">Link Bukti (opsional)</label>
+          <input type="url" class="form-control" id="bukti" placeholder="https://drive.google.com/..." />
+        </div>
         <button type="submit" class="btn btn-primary w-100">Simpan</button>
       </form>
 
-      <!-- Riwayat Simpanan -->
+      <!-- Riwayat -->
       <h4 class="mb-3">Riwayat Simpanan</h4>
       <ul id="riwayat" class="list-group"></ul>
     </div>
   </div>
 
   <script>
-    const scriptURL = "PASTE_URL_WEB_APP_MU_DISINI"; // Ganti dengan URL Web App dari Google Apps Script
+    const scriptURL = "PASTE_URL_WEB_APP_MU_DISINI"; // Ganti dengan URL Web App Google Apps Script
 
-    // Kirim data ke spreadsheet
-    document.getElementById("kasForm").addEventListener("submit", e => {
+    // Kirim data ke Spreadsheet
+    document.getElementById("kasForm").addEventListener("submit", function(e) {
       e.preventDefault();
       const nama = document.getElementById("nama").value;
       const jumlah = document.getElementById("jumlah").value;
+      const bukti = document.getElementById("bukti").value;
 
       fetch(scriptURL, {
         method: 'POST',
-        body: new URLSearchParams({ nama, jumlah })
+        body: new URLSearchParams({ nama, jumlah, bukti })
       })
       .then(() => {
         alert("✅ Data berhasil disimpan!");
@@ -51,7 +56,7 @@
       .catch(err => alert("❌ Gagal menyimpan: " + err));
     });
 
-    // Ambil riwayat simpanan dari spreadsheet
+    // Ambil riwayat dari Spreadsheet
     function loadRiwayat() {
       fetch(scriptURL + "?action=read")
         .then(res => res.json())
@@ -60,14 +65,17 @@
           list.innerHTML = "";
           data.reverse().forEach(row => {
             const li = document.createElement("li");
-            li.className = "list-group-item d-flex justify-content-between";
-            li.innerHTML = `<strong>${row.nama}</strong><span>${row.tanggal} - Rp${row.jumlah}</span>`;
+            li.className = "list-group-item";
+            li.innerHTML = `
+              <strong>${row.nama}</strong> - Rp${row.jumlah} (${row.tanggal})
+              ${row.bukti ? `<br><a href="${row.bukti}" target="_blank">🔗 Lihat Bukti</a>` : ""}
+            `;
             list.appendChild(li);
           });
         });
     }
 
-    // Muat saat pertama kali
+    // Load saat pertama kali
     loadRiwayat();
   </script>
 </body>
