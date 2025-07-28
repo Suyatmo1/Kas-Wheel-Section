@@ -48,14 +48,18 @@
         method: 'POST',
         body: new URLSearchParams({ nama, jumlah, bukti })
       })
-      .then(() => {
-        alert("✅ Data berhasil disimpan!");
-        document.getElementById("kasForm").reset();
-        loadRiwayat();
-      })
-      .catch(err => alert("❌ Gagal menyimpan: " + err));
-    });
-
+        .then(() => {
+  alert("✅ Data berhasil disimpan!");
+  const dataBaru = {
+    nama,
+    jumlah,
+    bukti,
+    tanggal: new Date().toLocaleDateString()
+  };
+  tambahRiwayatBaru(dataBaru);
+  document.getElementById("kasForm").reset();
+})
+     
     // Ambil riwayat dari Spreadsheet
    function loadRiwayat() {
   fetch(scriptURL + "?action=read")
@@ -90,6 +94,30 @@
     
     // Load saat pertama kali
     loadRiwayat();
+    function tambahRiwayatBaru(data, index = Date.now()) {
+  const riwayat = document.getElementById("riwayat");
+  const item = document.createElement("div");
+  item.className = "accordion-item";
+
+  item.innerHTML = `
+    <h2 class="accordion-header" id="heading${index}">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${index}" aria-expanded="false" aria-controls="collapse${index}">
+        ${data.nama} - Rp${data.jumlah} (${data.tanggal || new Date().toLocaleDateString()})
+      </button>
+    </h2>
+    <div id="collapse${index}" class="accordion-collapse collapse" aria-labelledby="heading${index}" data-bs-parent="#riwayat">
+      <div class="accordion-body">
+        <p><strong>Nama:</strong> ${data.nama}</p>
+        <p><strong>Jumlah:</strong> Rp${data.jumlah}</p>
+        <p><strong>Tanggal:</strong> ${data.tanggal || new Date().toLocaleDateString()}</p>
+        ${data.bukti ? `<p><a href="${data.bukti}" target="_blank" class="btn btn-sm btn-outline-primary">🔗 Lihat Bukti</a></p>` : "<p>Tidak ada bukti.</p>"}
+      </div>
+    </div>
+  `;
+
+  // Tambahkan di atas (terbaru di urutan pertama)
+  riwayat.prepend(item);
+}
   </script>
   function loadRiwayat() {
       fetch(scriptURL + "?action=read")
