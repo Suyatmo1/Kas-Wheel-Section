@@ -57,24 +57,37 @@
     });
 
     // Ambil riwayat dari Spreadsheet
-    function loadRiwayat() {
-      fetch(scriptURL + "?action=read")
-        .then(res => res.json())
-        .then(data => {
-          const list = document.getElementById("riwayat");
-          list.innerHTML = "";
-          data.reverse().forEach(row => {
-            const li = document.createElement("li");
-            li.className = "list-group-item";
-            li.innerHTML = `
-              <strong>${row.nama}</strong> - Rp${row.jumlah} (${row.tanggal})
-              ${row.bukti ? `<br><a href="${row.bukti}" target="_blank">🔗 Lihat Bukti</a>` : ""}
-            `;
-            list.appendChild(li);
-          });
-        });
-    }
+   function loadRiwayat() {
+  fetch(scriptURL + "?action=read")
+    .then(res => res.json())
+    .then(data => {
+      const riwayat = document.getElementById("riwayat");
+      riwayat.innerHTML = "";
 
+      data.reverse().forEach((row, index) => {
+        const item = document.createElement("div");
+        item.className = "accordion-item";
+
+        item.innerHTML = `
+          <h2 class="accordion-header" id="heading${index}">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${index}" aria-expanded="false" aria-controls="collapse${index}">
+              ${row.nama} - Rp${row.jumlah} (${row.tanggal})
+            </button>
+          </h2>
+          <div id="collapse${index}" class="accordion-collapse collapse" aria-labelledby="heading${index}" data-bs-parent="#riwayat">
+            <div class="accordion-body">
+              <p><strong>Nama:</strong> ${row.nama}</p>
+              <p><strong>Jumlah:</strong> Rp${row.jumlah}</p>
+              <p><strong>Tanggal:</strong> ${row.tanggal}</p>
+              ${row.bukti ? `<p><a href="${row.bukti}" target="_blank" class="btn btn-sm btn-outline-primary">🔗 Lihat Bukti</a></p>` : "<p>Tidak ada bukti.</p>"}
+            </div>
+          </div>
+        `;
+        riwayat.appendChild(item);
+      });
+    });
+}
+    
     // Load saat pertama kali
     loadRiwayat();
   </script>
