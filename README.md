@@ -1,27 +1,17 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.*;
 import java.sql.*;
 import java.time.LocalDate;
-import java.util.*;
-import java.io.*;
-import java.security.GeneralSecurityException;
 
-// Google Sheets API
-import com.google.api.services.sheets.v4.*;
-import com.google.api.services.sheets.v4.model.*;
-import com.google.api.client.googleapis.auth.oauth2.*;
-import com.google.api.client.googleapis.javanet.*;
-import com.google.api.client.json.jackson2.*;
-import com.google.api.client.http.javanet.NetHttpTransport;
-
-public class AplikasiKasGabungSpreadsheet {
+public class AplikasiKasGabung {
     public static void main(String[] args) {
-        Database.init(); // inisialisasi tabel
+        Database.init(); // inisialisasi database
         new LoginFrame();
     }
 }
 
-// ==================== DATABASE =====================
+// === DATABASE SETUP ===
 class Database {
     public static Connection connect() {
         try {
@@ -55,7 +45,7 @@ class Database {
     }
 }
 
-// ==================== LOGIN =====================
+// === LOGIN FRAME ===
 class LoginFrame extends JFrame {
     public LoginFrame() {
         setTitle("Login Anggota");
@@ -101,7 +91,7 @@ class LoginFrame extends JFrame {
     }
 }
 
-// ==================== REGISTRASI =====================
+// === REGISTER FRAME ===
 class RegisterFrame extends JFrame {
     public RegisterFrame() {
         setTitle("Registrasi Anggota");
@@ -142,7 +132,7 @@ class RegisterFrame extends JFrame {
     }
 }
 
-// ==================== DASHBOARD =====================
+// === MAIN FRAME ===
 class MainFrame extends JFrame {
     int anggotaId;
     String nama;
@@ -173,17 +163,10 @@ class MainFrame extends JFrame {
             try (Connection conn = Database.connect()) {
                 String sql = "INSERT INTO simpanan (anggota_id, tanggal, jumlah) VALUES (?, ?, ?)";
                 PreparedStatement stmt = conn.prepareStatement(sql);
-                String tanggal = LocalDate.now().toString();
-                int jumlah = Integer.parseInt(tfJumlah.getText());
-
                 stmt.setInt(1, anggotaId);
-                stmt.setString(2, tanggal);
-                stmt.setInt(3, jumlah);
+                stmt.setString(2, LocalDate.now().toString());
+                stmt.setInt(3, Integer.parseInt(tfJumlah.getText()));
                 stmt.executeUpdate();
-
-                // Kirim ke Google Spreadsheet
-                GoogleSheetService.kirimData(tanggal, nama, jumlah);
-
                 loadRiwayat(taRiwayat);
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "Gagal menyimpan.");
@@ -206,41 +189,6 @@ class MainFrame extends JFrame {
             }
         } catch (Exception e) {
             e.printStackTrace();
-        }
-    }
-}
-
-// ==================== GOOGLE SHEETS SERVICE =====================
-class GoogleSheetService {
-    private static final String APPLICATION_NAME = "AplikasiKasJava";
-    private static final String SPREADSHEET_ID = "ISI_ID_SPREADSHEET_KAMU"; // GANTI DENGAN ID SPREADSHEET KAMU
-    private static final String SHEET_NAME = "Sheet1";
-    private static Sheets sheetsService;
-
-    public static Sheets getSheetsService() throws IOException, GeneralSecurityException {
-        if (sheetsService == null) {
-            GoogleCredential credential = GoogleCredential.fromStream(new FileInputStream("credentials.json"))
-                    .createScoped(Collections.singletonList("https://www.googleapis.com/auth/spreadsheets"));
-            sheetsService = new Sheets.Builder(new NetHttpTransport(), JacksonFactory.getDefaultInstance(), credential)
-                    .setApplicationName(APPLICATION_NAME)
-                    .build();
-        }
-        return sheetsService;
-    }
-
-    public static void kirimData(String tanggal, String nama, int jumlah) {
-        try {
-            Sheets service = getSheetsService();
-            List<Object> row = Arrays.asList(tanggal, nama, jumlah);
-            List<List<Object>> values = Collections.singletonList(row);
-
-            ValueRange body = new ValueRange().setValues(values);
-            service.spreadsheets().values()
-                    .append(SPREADSHEET_ID, SHEET_NAME + "!A:C", body)
-                    .setValueInputOption("RAW")
-                    .execute();
-        } catch (Exception e) {
-            System.out.println("Gagal kirim ke Google Sheet: " + e.getMessage());
         }
     }
 }
