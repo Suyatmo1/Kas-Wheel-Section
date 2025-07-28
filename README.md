@@ -91,5 +91,23 @@
     // Load saat pertama kali
     loadRiwayat();
   </script>
+  function loadRiwayat() {
+      fetch(scriptURL + "?action=read")
+        .then(res => res.json())
+        .then(data => {
+          const list = document.getElementById("riwayat");
+          list.innerHTML = "";
+          data.reverse().forEach(row => {
+            const li = document.createElement("li");
+            li.className = "list-group-item";
+            li.innerHTML = `
+              <strong>${row.nama}</strong> - Rp${row.jumlah} (${row.tanggal})
+              ${row.bukti ? `<br><a href="${row.bukti}" target="_blank">🔗 Lihat Bukti</a>` : ""}
+            `;
+            list.appendChild(li);
+          });
+        });
+    }
+
 </body>
 </html>
